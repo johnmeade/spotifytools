@@ -1,0 +1,8 @@
+__pycache__
+*.py[cod]
+*$py.class
+/.venv
+/.vscode
+/secret/*
+/cache/*
+/flask_session/*
