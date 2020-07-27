@@ -1,26 +1,37 @@
-from .actions import perform, shuffle_albums
+from ..actions.queue import shuffle_liked_albums
 
 from flask import Flask, session, request, redirect
 from flask_session import Session
 import spotipy
 
+from threading import Thread
 from pathlib import Path
 import os
 
 
+HERE = Path(__file__).parent
+
+# flask init
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.urandom(64)
 app.config['SESSION_TYPE'] = 'filesystem'
+app.config['SESSION_FILE_DIR'] = str(HERE.joinpath('.session'))
 
+# flask session init
 Session(app)
 
-CACHE = Path('~', '.cache', 'spotifytools').expanduser()
+# spotipy init
 SCOPES = ','.join([
     'user-modify-playback-state',
     'user-library-read',
 ])
-auth_manager = spotipy.oauth2.SpotifyOAuth(scope=SCOPES, cache_path=CACHE)
+auth_manager = spotipy.oauth2.SpotifyOAuth(scope=SCOPES, cache_path=HERE.joinpath('.cache'))
 spotify = spotipy.Spotify(auth_manager=auth_manager)
+
+
+def perform(action, args):
+    thread = Thread(target=action, args=args)
+    thread.start()
 
 
 @app.route('/')

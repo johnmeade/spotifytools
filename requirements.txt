@@ -1,3 +1,4 @@
 spotipy
 Flask
 Flask-Session
+tinydb
