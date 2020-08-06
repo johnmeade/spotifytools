@@ -2,3 +2,4 @@ spotipy
 Flask
 Flask-Session
 tinydb
+tqdm

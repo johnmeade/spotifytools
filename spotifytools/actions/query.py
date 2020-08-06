@@ -1,18 +1,26 @@
 from time import sleep
+from tqdm import tqdm
 
 
 RATE_LIMIT_SLEEP = 0.1
 MAX_LIMIT = 50
 
 
-def _all_paginated_items(func):
+def _all_paginated_items(func, pbar=False):
     items = []
     offset = 0
     total = 0
+    progress = None
     while True:
+        # obtain and read chunk
         chunk = func(limit=MAX_LIMIT, offset=offset)
         total = chunk['total']
         chunk_items = chunk['items']
+        # progress bar
+        if pbar:
+            progress = progress or tqdm(total=total)
+            progress.update(len(chunk_items))
+        # accumulate
         items += chunk_items
         offset += len(chunk_items)
         if offset >= total:
@@ -21,14 +29,13 @@ def _all_paginated_items(func):
     return items
 
 
-def all_liked_albums(spotify):
-    items = _all_paginated_items(spotify.current_user_saved_albums)
+def all_liked_albums(spotify, pbar=False):
+    items = _all_paginated_items(spotify.current_user_saved_albums, pbar)
     return [ item['album'] for item in items ]
 
 
-def all_liked_tracks(spotify):
-    items = _all_paginated_items(spotify.current_user_saved_tracks)
-    import ipdb; ipdb.set_trace()
+def all_liked_tracks(spotify, pbar=False):
+    items = _all_paginated_items(spotify.current_user_saved_tracks, pbar)
     return [ item['track'] for item in items ]
 
 
