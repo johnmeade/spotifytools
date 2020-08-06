@@ -21,6 +21,7 @@ export SPOTIPY_REDIRECT_URI='http://localhost:1234'
 Run scripts:
 
 ```sh
+source secrets/auth.sh
 python -m spotifytools.scripts.save_liked
 ```
 
