@@ -3,3 +3,5 @@ Flask
 Flask-Session
 tinydb
 tqdm
+requests
+beautifulsoup4

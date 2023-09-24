@@ -2,7 +2,7 @@
 https://github.com/plamere/spotipy/pull/539
 '''
 
-from ..actions.queue import shuffle_liked_albums
+from ..spotify.queue import shuffle_liked_albums
 
 from flask import Flask, session, request, redirect
 from flask_session import Session
