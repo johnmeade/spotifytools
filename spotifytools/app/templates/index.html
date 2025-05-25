@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Music Shuffle</title>
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      max-width: 600px;
+      margin: 2rem auto;
+      padding: 1rem;
+      background-color: #f9fafb;
+      color: #111;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.5rem;
+    }
+
+    a {
+      color: #2563eb;
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    p {
+      font-size: 0.9rem;
+      color: #555;
+    }
+
+    nav {
+      margin-top: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    nav a {
+      padding: 0.5rem;
+      background: #e0e7ff;
+      border-radius: 0.375rem;
+      text-align: center;
+      font-weight: 500;
+    }
+
+    nav a:hover {
+      background: #c7d2fe;
+    }
+  </style>
+</head>
+<body>
+  <section class="user-session">
+    <header>
+      <h2>Logged in as: {{ username }}</h2>
+      <a href="/sign_out">Sign out</a>
+    </header>
+    <p>Ensure you have a device that is current (or was very recently) playing music before clicking a button below.</p>
+    <nav>
+      <a href="/album_shuffle">Shuffle my liked albums</a>
+      <a href="/shuffle_recent_liked">Shuffle my recently liked songs</a>
+      <a href="/shuffle_recent_liked_and_birp">Shuffle my recently liked songs with the latest BIRP playlist</a>
+    </nav>
+  </section>
+</body>
+</html>

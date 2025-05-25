@@ -1,4 +1,4 @@
-from ..actions.query import all_liked_tracks
+from ..actions.query import get_liked_tracks
 
 import spotipy
 
@@ -15,7 +15,7 @@ def main():
     api = spotipy.Spotify(auth_manager=auth_manager)
     # query
     print('Fetching all liked songs')
-    liked = all_liked_tracks(api, pbar=True)
+    liked = get_liked_tracks(api, pbar=True)
     # save
     print('Saving to disk')
     with open(HERE.joinpath('.artifacts', 'saved_tracks.pkl'), 'wb') as f:

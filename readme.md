@@ -4,8 +4,8 @@
 Install:
 
 ```sh
-python -m venv .venv
-source .venv/bin/activate
+conda create -n spotify python=3.11
+conda activate spotify
 pip install -r requirements.txt
 ```
 
@@ -21,6 +21,7 @@ export SPOTIPY_REDIRECT_URI='http://localhost:1234'
 Run scripts:
 
 ```sh
+conda activate spotify
 source secrets/auth.sh
 python -m spotifytools.scripts.save_liked
 ```
@@ -28,5 +29,7 @@ python -m spotifytools.scripts.save_liked
 Run server:
 
 ```sh
+conda activate spotify
+source secrets/auth.sh
 ./app.sh
 ```
