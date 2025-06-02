@@ -2,7 +2,7 @@
 https://github.com/plamere/spotipy/pull/539
 '''
 
-from ..actions.queue import shuffle_liked_albums, shuffle_recent_liked, shuffle_recent_liked_and_birp
+from ..actions.queue import shuffle_liked_albums, shuffle_recent_liked, shuffle_recent_liked_and_birp, john_shuffle
 
 from flask import Flask, session, request, redirect, render_template
 from flask_session import Session
@@ -85,6 +85,11 @@ def shuffle_recent_liked_route():
 @app.route('/shuffle_recent_liked_and_birp')
 def shuffle_recent_liked_and_birp_route():
     return _generic_route(shuffle_recent_liked_and_birp, [], 'shuffled recently liked songs and BIRP songs.')
+
+
+@app.route('/john_shuffle')
+def john_shuffle_route():
+    return _generic_route(john_shuffle, [], 'shuffled various John music.')
 
 
 def _generic_route(action, extra_args, resp_msg):

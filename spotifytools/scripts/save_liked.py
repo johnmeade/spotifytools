@@ -22,6 +22,9 @@ def main():
         pickle.dump(liked, f)
     print('Done!')
 
+    import json
+    (HERE / '.artifacts' / 'saved_tracks.json').write_text(json.dumps(liked))
+
 
 if __name__ == '__main__':
     main()

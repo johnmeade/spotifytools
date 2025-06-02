@@ -1,6 +1,9 @@
-from time import sleep
-from tqdm import tqdm
+from time import time, sleep
 from datetime import datetime
+from pathlib import Path
+
+import json
+from tqdm import tqdm
 
 
 RATE_LIMIT_SLEEP = 0.1
@@ -47,6 +50,61 @@ def get_liked_tracks(spotify, pbar=False, limit=None):
 # def get_new_rec_releases(spotify, pbar=False, limit=None):
 #     items = _paginated_items(spotify., pbar, limit)
 #     return [ item['track'] for item in items ]
+
+
+def get_playlist_tracks(spotify, name=None, pid=None):
+    pls = spotify.current_user_playlists()
+    for pl in pls["items"]:
+        if (pid and pl["id"] == pid) or (name and pl["name"] == name):
+            pl_detail = spotify.user_playlist(pl["owner"]["id"], playlist_id=pl["id"])
+            return pl_detail["tracks"]["items"]
+    print(f"ERROR: playlist not found ({name=}, {pid=})")
+    return []
+
+
+def get_john_variety_tracks(spotify):
+    pl_detail = spotify.user_playlist("songlistener1998", playlist_id="7uAVNyIOCtftTU4J6xHvld")
+    return pl_detail["tracks"]["items"]
+
+
+_john_liked_cache_root = Path(__file__).parent.parent / "cache" / "john_liked"
+def get_cached_liked_tracks(spotify):
+    global _john_liked_cache_root
+    _john_liked_cache_root.mkdir(exist_ok=True)
+    now = int(time() * 1000)
+
+    # find all cache files (oldest-to-newest)
+    cache_fps = sorted(list(_john_liked_cache_root.glob("[0-9]*.json")), key=lambda s: int(s.split(".")[0]))
+
+    # remove old files
+    for fp in cache_fps[:-3]:
+        fp.unlink()
+
+    if len(cache_fps) == 0:
+        # get all and cache
+        cache = get_liked_tracks(spotify, limit=None)
+        most_recent_fp = _john_liked_cache_root / f"{now}.json"
+        most_recent_fp.write_text(json.dumps(cache))
+    else:
+        # read most recent
+        most_recent_fp = cache_fps[-1]
+        cache = json.loads(most_recent_fp.read_text())
+
+        # check for updates TODO: handle more than 100 stale
+        cache_ids = {track["id"] for track in cache}
+        updates = get_liked_tracks(spotify, limit=100)
+        added = 0
+        for track in reversed(updates):
+            if track["id"] not in cache_ids:
+                cache = [track] + cache
+                added += 1
+
+        # update cache if it was changed
+        if added > 0:
+            most_recent_fp = _john_liked_cache_root / f"{now + 1}.json"
+            most_recent_fp.write_text(json.dumps(cache))
+
+    return cache
 
 
 def get_curr_birp_tracks(spotify):

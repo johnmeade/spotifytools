@@ -1,4 +1,6 @@
-from .query import get_liked_albums, get_liked_tracks, get_curr_birp_tracks
+from .query import (
+    get_liked_albums, get_liked_tracks, get_curr_birp_tracks, get_john_variety_tracks, get_cached_liked_tracks,
+)
 from random import sample, shuffle
 from time import sleep
 
@@ -25,6 +27,27 @@ def shuffle_recent_liked_and_birp(spotify, track_sleep=1.0):
     tracks = get_liked_tracks(spotify, limit=100)
     tracks += get_curr_birp_tracks(spotify)
     shuffle(tracks)
+    for track in tracks:
+        spotify.add_to_queue(track['uri'])
+        sleep(track_sleep)
+
+
+def john_shuffle(spotify, track_sleep=1.0):
+    # query tracks
+    all_liked = get_cached_liked_tracks(spotify)
+    recent_liked = all_liked[:50]
+    variety = get_john_variety_tracks(spotify)
+    birp = get_curr_birp_tracks(spotify)
+
+    # shuffle and combine
+    shuffle(all_liked)
+    shuffle(recent_liked)
+    shuffle(variety)
+    shuffle(birp)
+    tracks = all_liked[:50] + recent_liked + variety[:50] + birp[:50]
+    shuffle(tracks)
+
+    # add to queue
     for track in tracks:
         spotify.add_to_queue(track['uri'])
         sleep(track_sleep)
