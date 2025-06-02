@@ -108,17 +108,28 @@ def get_cached_liked_tracks(spotify):
 
 
 def get_curr_birp_tracks(spotify):
-    mo = datetime.now().strftime("%B")
-    yr = datetime.now().strftime("%Y")
-    birp_user_id = "1217281510"
+    # get year and cur/prev month strings (playlist may not be live on 1st of a new month)
+    now = datetime.now()
+    yr = now.strftime("%Y")
+    cur_mo = now.strftime("%B")
+    cur_mo_i = int(now.strftime("%m"))
+    prev_mo_i = (cur_mo_i - 2) % 12 + 1
+    prev_mo = datetime(now.year, prev_mo_i, 1).strftime("%B")
     # get latest birp playlists
+    birp_user_id = "1217281510"
     birp_pls = spotify.user_playlists(birp_user_id, limit=10)["items"]
     # find current playlist
     curr_birp_id = None
-    for pl in birp_pls:
-        if all(x in pl["name"] for x in ["BIRP!", mo, yr]):
-            curr_birp_id = pl["id"]
+    for mo in [cur_mo, prev_mo]:
+        for pl in birp_pls:
+            if all(x in pl["name"] for x in ["BIRP!", mo, yr]):
+                curr_birp_id = pl["id"]
+                break
+        if curr_birp_id is not None:
             break
+    if curr_birp_id is None:
+        print("ERROR: couldn't find BIRP playlist!")
+        return []
     # read tracks from current playlist
     curr_birp = spotify.user_playlist(birp_user_id, playlist_id=curr_birp_id)
     curr_birp_tracks = []
