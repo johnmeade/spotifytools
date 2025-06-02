@@ -64,7 +64,7 @@ def get_playlist_tracks(spotify, name=None, pid=None):
 
 def get_john_variety_tracks(spotify):
     pl_detail = spotify.user_playlist("songlistener1998", playlist_id="7uAVNyIOCtftTU4J6xHvld")
-    return pl_detail["tracks"]["items"]
+    return [item["track"] for item in pl_detail["tracks"]["items"]]
 
 
 _john_liked_cache_root = Path(__file__).parent.parent.parent / "cache" / "john_liked"
