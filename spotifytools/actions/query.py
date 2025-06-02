@@ -67,14 +67,14 @@ def get_john_variety_tracks(spotify):
     return pl_detail["tracks"]["items"]
 
 
-_john_liked_cache_root = Path(__file__).parent.parent / "cache" / "john_liked"
+_john_liked_cache_root = Path(__file__).parent.parent.parent / "cache" / "john_liked"
 def get_cached_liked_tracks(spotify):
     global _john_liked_cache_root
     _john_liked_cache_root.mkdir(exist_ok=True)
     now = int(time() * 1000)
 
     # find all cache files (oldest-to-newest)
-    cache_fps = sorted(list(_john_liked_cache_root.glob("[0-9]*.json")), key=lambda s: int(s.split(".")[0]))
+    cache_fps = sorted(list(_john_liked_cache_root.glob("[0-9]*.json")), key=lambda s: int(s.stem))
 
     # remove old files
     for fp in cache_fps[:-3]:
