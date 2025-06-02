@@ -72,6 +72,7 @@ def get_cached_liked_tracks(spotify):
     global _john_liked_cache_root
     _john_liked_cache_root.mkdir(exist_ok=True)
     now = int(time() * 1000)
+    is_john = spotify.current_user()["id"] == "songlistener1998"
 
     # find all cache files (oldest-to-newest)
     cache_fps = sorted(list(_john_liked_cache_root.glob("[0-9]*.json")), key=lambda s: int(s.stem))
@@ -82,6 +83,8 @@ def get_cached_liked_tracks(spotify):
 
     if len(cache_fps) == 0:
         # get all and cache
+        if not is_john:
+            return []
         cache = get_liked_tracks(spotify, limit=None)
         most_recent_fp = _john_liked_cache_root / f"{now}.json"
         most_recent_fp.write_text(json.dumps(cache))
@@ -91,18 +94,19 @@ def get_cached_liked_tracks(spotify):
         cache = json.loads(most_recent_fp.read_text())
 
         # check for updates TODO: handle more than 100 stale
-        cache_ids = {track["id"] for track in cache}
-        updates = get_liked_tracks(spotify, limit=100)
-        added = 0
-        for track in reversed(updates):
-            if track["id"] not in cache_ids:
-                cache = [track] + cache
-                added += 1
+        if is_john:
+            cache_ids = {track["id"] for track in cache}
+            updates = get_liked_tracks(spotify, limit=100)
+            added = 0
+            for track in reversed(updates):
+                if track["id"] not in cache_ids:
+                    cache = [track] + cache
+                    added += 1
 
-        # update cache if it was changed
-        if added > 0:
-            most_recent_fp = _john_liked_cache_root / f"{now + 1}.json"
-            most_recent_fp.write_text(json.dumps(cache))
+            # update cache if it was changed
+            if added > 0:
+                most_recent_fp = _john_liked_cache_root / f"{now + 1}.json"
+                most_recent_fp.write_text(json.dumps(cache))
 
     return cache
 
