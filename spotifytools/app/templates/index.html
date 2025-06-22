@@ -2,26 +2,46 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Music Shuffle</title>
+  <title>Spotify Queue Builder</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
+    :root {
+      --bg: #121212;
+      --text: #f5f5f5;
+      --muted: #aaaaaa;
+      --accent: #1db954;
+      --accent-hover: #1ed760;
+      --card-bg: #1f1f1f;
+      --notif-bg: #14532d;
+      --notif-text: #d1fae5;
+      --button-bg: #2d2d2d;
+      --button-hover: #3a3a3a;
+      --danger: #7f1d1d;
+      --danger-hover: #991b1b;
+    }
+
     body {
       font-family: system-ui, sans-serif;
+      max-width: 100%;
+      width: 100%;
       max-width: 600px;
       margin: 2rem auto;
       padding: 1rem;
-      background-color: #f9fafb;
-      color: #111;
+      background-color: var(--bg);
+      color: var(--text);
+      box-sizing: border-box;
     }
 
     header {
       display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 0.5rem;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
     }
 
     a {
-      color: #2563eb;
+      color: var(--accent);
       text-decoration: none;
     }
 
@@ -30,27 +50,73 @@
     }
 
     p {
-      font-size: 0.9rem;
-      color: #555;
+      font-size: 0.95rem;
+      color: var(--muted);
     }
 
-    nav {
+    h2, h3 {
+      margin-top: 1.5rem;
+      color: var(--text);
+    }
+
+    nav,
+    .job-container,
+    .notif-container {
       margin-top: 1rem;
       display: flex;
       flex-direction: column;
       gap: 0.5rem;
     }
 
-    nav a {
-      padding: 0.5rem;
-      background: #e0e7ff;
+    form {
+      display: flex;
+    }
+
+    button {
+      flex: 1;
+      padding: 0.6rem;
+      background: var(--button-bg);
+      color: var(--text);
+      border: none;
       border-radius: 0.375rem;
       text-align: center;
       font-weight: 500;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
     }
 
-    nav a:hover {
-      background: #c7d2fe;
+    button:hover {
+      background: var(--button-hover);
+    }
+
+    .job-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: monospace;
+      padding: 0.5rem 0.75rem;
+      background-color: var(--card-bg);
+      border-radius: 0.375rem;
+    }
+
+    .job-item button {
+      background: var(--danger);
+      color: white;
+      padding: 0.4rem 0.75rem;
+      border-radius: 0.375rem;
+      margin-left: 1rem;
+    }
+
+    .job-item button:hover {
+      background: var(--danger-hover);
+    }
+
+    .notif-container {
+      font-weight: 500;
+      background-color: var(--notif-bg);
+      color: var(--notif-text);
+      padding: 0.75rem;
+      border-radius: 0.375rem;
     }
   </style>
 </head>
@@ -60,17 +126,105 @@
       <h2>Logged in as: {{ username }}</h2>
       <a href="/sign_out">Sign out</a>
     </header>
+
     <p>Ensure you have a device that is currently (or was very recently) playing music before clicking a button below.</p>
+
     <h3>General</h3>
     <nav>
-      <a href="/album_shuffle">Shuffle my liked albums</a>
-      <a href="/shuffle_recent_liked">Shuffle my recently liked songs</a>
-      <a href="/shuffle_recent_liked_and_birp">Shuffle my recently liked songs with the latest BIRP playlist</a>
+      <form onsubmit="shuffle_action(event, '/album_shuffle')"><button type="submit">Shuffle my liked albums</button></form>
+      <form onsubmit="shuffle_action(event, '/shuffle_recent_liked')"><button type="submit">Shuffle my recently liked songs</button></form>
+      <form onsubmit="shuffle_action(event, '/shuffle_recent_liked_and_birp')"><button type="submit">Shuffle my recently liked songs with the latest BIRP playlist</button></form>
     </nav>
+
     <h3>John-specific</h3>
     <nav>
-      <a href="/john_shuffle">Custom weighted shuffle of various John playlists</a>
+      <form onsubmit="shuffle_action(event, '/john_birp_shuffle')"><button type="submit">Custom weighted shuffle of various John playlists + BIRP</button></form>
+      <form onsubmit="shuffle_action(event, '/john_shuffle')"><button type="submit">Custom weighted shuffle of various John playlists</button></form>
     </nav>
+
+    <h3>Notifications</h3>
+    <div class="notif-container" style="display: none;"></div>
+
+    <h3>Active Jobs</h3>
+    <div class="job-container">Loading...</div>
   </section>
+
+  <script>
+    const nc = document.querySelector(".notif-container");
+    const jc = document.querySelector(".job-container");
+
+    function postreq(uri, body = "") {
+      return fetch(uri, {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        },
+        body
+      });
+    }
+
+    function show_notification(msg) {
+      nc.innerText = msg || "Action complete.";
+      nc.style.display = "block";
+      clearTimeout(nc._timeout);
+      nc._timeout = setTimeout(() => {
+        nc.style.display = "none";
+        nc.innerText = "";
+      }, 5000);
+    }
+
+    function shuffle_action(event, uri) {
+      event.preventDefault();
+      postreq(uri).then(response => response.json()).then(j => {
+        show_notification(j["msg"]);
+        update_jobs();
+      });
+    }
+
+    function jobnode(job_id) {
+      const node = document.createElement("div");
+      node.classList.add("job-item");
+
+      const idText = document.createElement("span");
+      idText.textContent = job_id;
+
+      const rmBtn = document.createElement("button");
+      rmBtn.textContent = "Stop Job";
+      rmBtn.onclick = () => {
+        postreq("/stop_job?job_id=" + job_id).then(() => update_jobs());
+      };
+
+      node.appendChild(idText);
+      node.appendChild(rmBtn);
+
+      return node;
+    }
+
+    function update_jobs_ui() {
+      jc.innerHTML = "";
+      if (job_ids.length === 0 || (job_ids.length === 1 && job_ids[0] === "")) {
+        jc.textContent = "No active jobs.";
+        return;
+      }
+      for (let job_id of job_ids) {
+        jc.appendChild(jobnode(job_id));
+      }
+    }
+
+    function update_jobs() {
+      postreq("/jobs").then(response => response.json()).then(j => {
+        job_ids = j["job_ids"];
+        localStorage.setItem("job_ids", job_ids.join(","));
+        update_jobs_ui();
+      });
+    }
+
+    if (!localStorage.getItem("job_ids")) localStorage.setItem("job_ids", "");
+    let job_ids = localStorage.getItem("job_ids").split(",");
+    update_jobs_ui();
+    update_jobs();
+    const siid = setInterval(update_jobs, 5000);
+  </script>
 </body>
 </html>
