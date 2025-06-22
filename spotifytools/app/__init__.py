@@ -32,8 +32,14 @@ SCOPES = ','.join([
 ])
 
 
+def get_uuid():
+    if not session.get('uuid'):
+        session['uuid'] = str(uuid4())
+    return session['uuid']
+
+
 def session_cache_path():
-    return str(CACHE_ROOT.joinpath(session.get('uuid')))
+    return str(CACHE_ROOT.joinpath(get_uuid()))
 
 
 def session_auth_mgr(show_dialog=False):
@@ -42,13 +48,6 @@ def session_auth_mgr(show_dialog=False):
         cache_path=session_cache_path(),
         show_dialog=True,
     )
-
-
-def get_uuid():
-    if not session.get('uuid'):
-        # Step 1. Visitor is unknown, give random ID
-        session['uuid'] = str(uuid4())
-    return session['uuid']
 
 
 @app.route('/')
