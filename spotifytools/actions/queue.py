@@ -5,6 +5,7 @@ from spotipy.exceptions import SpotifyException
 from collections import defaultdict
 from random import sample, shuffle
 from time import sleep
+import numpy as np
 
 
 # (this won't work with multi-proc)
@@ -55,16 +56,17 @@ def shuffle_recent_liked_and_birp(uuid, job_id, spotify, track_sleep=TRACK_SLEEP
 def john_shuffle(uuid, job_id, spotify, incl_birp=True, track_sleep=TRACK_SLEEP):
     # query tracks
     all_liked = get_cached_liked_tracks(spotify)
-    recent_liked = all_liked[:50]
+    p_liked = 1.01 + np.cos(np.linspace(0, np.pi, len(all_liked)))
+    p_liked /= p_liked.sum()
+    sampled_liked = np.random.choice(all_liked, 50, replace=False, p=p_liked).tolist()
     variety = get_john_variety_tracks(spotify)
     birp = get_curr_birp_tracks(spotify) if incl_birp else []
 
     # shuffle and combine
-    shuffle(all_liked)
-    shuffle(recent_liked)
+    shuffle(sampled_liked)
     shuffle(variety)
     shuffle(birp)
-    tracks = all_liked[:50] + recent_liked + variety[:50] + birp[:50]
+    tracks = sampled_liked + variety[:50] + birp[:50]
     shuffle(tracks)
 
     # add to queue

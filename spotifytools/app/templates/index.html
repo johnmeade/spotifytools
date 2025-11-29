@@ -124,7 +124,7 @@
   <section class="user-session">
     <header>
       <h2>Logged in as: {{ username }}</h2>
-      <a href="/sign_out">Sign out</a>
+      <a href="/{{ path_prefix }}/sign_out">Sign out</a>
     </header>
 
     <p>Ensure you have a device that is currently (or was very recently) playing music before clicking a button below.</p>
@@ -154,7 +154,7 @@
     const jc = document.querySelector(".job-container");
 
     function postreq(uri, body = "") {
-      return fetch(uri, {
+      return fetch("/{{ path_prefix }}" + uri, {
         method: 'POST',
         headers: {
           'Accept': 'application/json',
