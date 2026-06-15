@@ -16,7 +16,6 @@ import os
 
 
 HERE = Path(__file__).parent
-PATH_PREFIX = os.environ.get("SPOTIFYTOOLS_ROOT_PATH_PREFIX", "").strip("/")
 
 # flask init
 app = Flask(__name__)
@@ -57,7 +56,7 @@ def index():
     if request.args.get("code"):
         # Step 3. Being redirected from Spotify auth page
         auth_manager.get_access_token(request.args.get("code"))
-        return redirect(f'/{PATH_PREFIX}/')
+        return redirect("/")
 
     if not auth_manager.get_cached_token():
         # Step 2. Display authorize link when no token
@@ -69,7 +68,6 @@ def index():
     return render_template(
         "index.html",
         username=spotify.me()["display_name"],
-        path_prefix=PATH_PREFIX,
     )
 
 
@@ -77,7 +75,7 @@ def index():
 def sign_out():
     os.remove(session_cache_path())
     session.clear()
-    return redirect(f'/{PATH_PREFIX}/')
+    return redirect("/")
 
 
 @app.route('/jobs', methods=["POST"])
@@ -124,7 +122,7 @@ def john_shuffle_route():
 def _generic_route(action, resp_msg, extra_args=[], extra_kwargs=dict()):
     auth_manager = session_auth_mgr()
     if not auth_manager.get_cached_token():
-        return redirect(f'/{PATH_PREFIX}/')
+        return redirect("/")
     job_id = token_hex(16)
     spotify = spotipy.Spotify(auth_manager=auth_manager)
     Thread(target=action, args=[get_uuid(), job_id, spotify] + extra_args, kwargs=extra_kwargs).start()

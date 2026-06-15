@@ -1,18 +1,16 @@
-from ..actions.query import get_liked_tracks
-
-import spotipy
-
-from pathlib import Path
+import json
 import pickle
+from pathlib import Path
+
+from ..actions.query import get_liked_tracks
+from ._auth import get_api
 
 
 HERE = Path(__file__).parent
 
 
 def main():
-    # spotipy init
-    auth_manager = spotipy.oauth2.SpotifyOAuth(scope='user-library-read', cache_path='/tmp/spotipy')
-    api = spotipy.Spotify(auth_manager=auth_manager)
+    api = get_api(scope='user-library-read')
     # query
     print('Fetching all liked songs')
     liked = get_liked_tracks(api, pbar=True)
@@ -20,10 +18,10 @@ def main():
     print('Saving to disk')
     with open(HERE.joinpath('.artifacts', 'saved_tracks.pkl'), 'wb') as f:
         pickle.dump(liked, f)
-    print('Done!')
 
-    import json
     (HERE / '.artifacts' / 'saved_tracks.json').write_text(json.dumps(liked))
+
+    print('Done!')
 
 
 if __name__ == '__main__':

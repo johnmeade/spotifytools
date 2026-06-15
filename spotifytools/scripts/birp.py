@@ -1,15 +1,13 @@
 from pathlib import Path
 
 import pickle
-import spotipy
 
 from ..actions.query import get_curr_birp_tracks
+from ._auth import get_api
 
 
 def main():
-    # spotipy init
-    auth_manager = spotipy.oauth2.SpotifyOAuth(scope='user-library-read', cache_path='/tmp/spotipy')
-    api = spotipy.Spotify(auth_manager=auth_manager)
+    api = get_api(scope='user-library-read')
     # query
     print('Fetching playlists')
     ts = get_curr_birp_tracks(api)
