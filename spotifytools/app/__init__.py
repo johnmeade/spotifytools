@@ -29,6 +29,7 @@ CACHE_ROOT = HERE.joinpath('.spotipy-cache').relative_to(Path.cwd())
 SCOPES = ','.join([
     'user-modify-playback-state',
     'user-library-read',
+    'playlist-read-private',
 ])
 
 
