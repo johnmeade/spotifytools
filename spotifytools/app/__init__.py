@@ -4,8 +4,9 @@ https://github.com/plamere/spotipy/pull/539
 
 from ..actions.queue import JOBS, shuffle_liked_albums, shuffle_recent_liked, shuffle_recent_liked_and_birp, john_shuffle
 
-from flask import Flask, session, request, redirect, render_template
+from flask import Flask, session, request, redirect, render_template, abort
 from flask_session import Session
+from werkzeug.middleware.proxy_fix import ProxyFix
 import spotipy
 
 from threading import Thread
@@ -19,9 +20,13 @@ HERE = Path(__file__).parent
 
 # flask init
 app = Flask(__name__)
+app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 app.config['SECRET_KEY'] = os.urandom(64)
 app.config['SESSION_TYPE'] = 'filesystem'
 app.config['SESSION_FILE_DIR'] = str(HERE.joinpath('.session'))
+app.config['SESSION_COOKIE_SECURE'] = True
+app.config['SESSION_COOKIE_HTTPONLY'] = True
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 Session(app)
 
 # spotipy init
@@ -43,25 +48,33 @@ def session_cache_path():
     return str(CACHE_ROOT.joinpath(get_uuid()))
 
 
-def session_auth_mgr(show_dialog=False):
+def session_auth_mgr(show_dialog=False, state=None):
     return spotipy.oauth2.SpotifyOAuth(
         scope=SCOPES,
         cache_path=session_cache_path(),
         show_dialog=show_dialog,
+        state=state,
     )
 
 
 @app.route('/')
 def index():
-    auth_manager = session_auth_mgr(show_dialog=True)
     if request.args.get("code"):
-        # Step 3. Being redirected from Spotify auth page
+        # Step 3. Being redirected from Spotify auth page. Verify the state
+        # we handed out in step 2 comes back unchanged (CSRF protection).
+        expected_state = session.pop("oauth_state", None)
+        if not expected_state or request.args.get("state") != expected_state:
+            abort(400, "Invalid or missing OAuth state")
+        auth_manager = session_auth_mgr(state=expected_state)
         auth_manager.get_access_token(request.args.get("code"))
         return redirect("/")
 
+    auth_manager = session_auth_mgr(show_dialog=True)
     if not auth_manager.get_cached_token():
         # Step 2. Display authorize link when no token
-        auth_url = auth_manager.get_authorize_url()
+        state = token_hex(16)
+        session["oauth_state"] = state
+        auth_url = auth_manager.get_authorize_url(state=state)
         return render_template("auth.html", auth_url=auth_url)
 
     # Step 4. Signed in, display data
