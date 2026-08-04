@@ -27,6 +27,7 @@ app.config['SESSION_FILE_DIR'] = str(HERE.joinpath('.session'))
 app.config['SESSION_COOKIE_SECURE'] = True
 app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+app.config['TEMPLATES_AUTO_RELOAD'] = True
 Session(app)
 
 # spotipy init
